@@ -46,9 +46,10 @@ import json
 import os
 import tensorflow as tf
 
-from object_detection.legacy import trainer
-from object_detection.builders import input_reader_builder
+from object_detection.builders import dataset_builder
+from object_detection.builders import graph_rewriter_builder
 from object_detection.builders import model_builder
+from object_detection.legacy import trainer
 from object_detection.utils import config_util
 
 tf.logging.set_verbosity(tf.logging.INFO)
@@ -83,6 +84,7 @@ flags.DEFINE_string('model_config_path', '',
 FLAGS = flags.FLAGS
 
 
+@tf.contrib.framework.deprecated(None, 'Use object_detection/model_main.py.')
 def main(_):
   assert FLAGS.train_dir, '`train_dir` is missing.'
   if FLAGS.task == 0: tf.gfile.MakeDirs(FLAGS.train_dir)
@@ -114,8 +116,11 @@ def main(_):
       model_config=model_config,
       is_training=True)
 
-  create_input_dict_fn = functools.partial(
-      input_reader_builder.build, input_config)
+  def get_next(config):
+    return dataset_builder.make_initializable_iterator(
+        dataset_builder.build(config)).get_next()
+
+  create_input_dict_fn = functools.partial(get_next, input_config)
 
   env = json.loads(os.environ.get('TF_CONFIG', '{}'))
   cluster_data = env.get('cluster', None)
@@ -154,9 +159,25 @@ def main(_):
     is_chief = (task_info.type == 'master')
     master = server.target
 
-  trainer.train(create_input_dict_fn, model_fn, train_config, master, task,
-                FLAGS.num_clones, worker_replicas, FLAGS.clone_on_cpu, ps_tasks,
-                worker_job_name, is_chief, FLAGS.train_dir)
+  graph_rewriter_fn = None
+  if 'graph_rewriter_config' in configs:
+    graph_rewriter_fn = graph_rewriter_builder.build(
+        configs['graph_rewriter_config'], is_training=True)
+
+  trainer.train(
+      create_input_dict_fn,
+      model_fn,
+      train_config,
+      master,
+      task,
+      FLAGS.num_clones,
+      worker_replicas,
+      FLAGS.clone_on_cpu,
+      ps_tasks,
+      worker_job_name,
+      is_chief,
+      FLAGS.train_dir,
+      graph_hook_fn=graph_rewriter_fn)
 
 
 if __name__ == '__main__':

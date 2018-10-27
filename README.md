@@ -82,6 +82,15 @@ The goals/steps of this project are the following:
 7. [Summary](#summary)
 
 
+## Version 
+
+**1. fix create_tf_record.py so that program code fit the content of yaml.**
+
+**1.1 added several shell scripts and util programs to make train / model.**
+
+**1.2 build shell / program to downgrade to tensorflow 1.3/4.**
+
+
 ## Introduction
 
 The goal of this project was to retrain a TensorFlow model on images of traffic lights in their different light states. The trained model was then used in the final capstone project of the Udacity Self-Driving Car Engineer Nanodegree Program as a frozen inference graph. Our project (and the implementation of the frozen graph) can be found here: [Drive Safely Capstone Project][capstone project]

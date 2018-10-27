@@ -46,7 +46,7 @@ import json
 import os
 import tensorflow as tf
 
-from object_detection.legacy import trainer
+from object_detection import trainer
 from object_detection.builders import input_reader_builder
 from object_detection.builders import model_builder
 from object_detection.utils import config_util
@@ -123,7 +123,7 @@ def main(_):
   task_data = env.get('task', None) or {'type': 'master', 'index': 0}
   task_info = type('TaskSpec', (object,), task_data)
 
-  # Parameters for a single worker.
+  print("Parameters for a single worker.")
   ps_tasks = 0
   worker_replicas = 1
   worker_job_name = 'lonely_worker'
@@ -153,6 +153,10 @@ def main(_):
     task = task_info.index
     is_chief = (task_info.type == 'master')
     master = server.target
+
+  #print(create_input_dict_fn, model_fn, train_config, master, task,
+  #              FLAGS.num_clones, worker_replicas, FLAGS.clone_on_cpu, ps_tasks,
+  #              worker_job_name, is_chief, FLAGS.train_dir)
 
   trainer.train(create_input_dict_fn, model_fn, train_config, master, task,
                 FLAGS.num_clones, worker_replicas, FLAGS.clone_on_cpu, ps_tasks,

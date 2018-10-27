@@ -62,12 +62,11 @@ def get_imgs_from_yaml(input_yaml, riib=False):
     :return: images: Labels for traffic lights
     """
     images = yaml.load(open(input_yaml, 'rb').read())
-    #print(images)
 
     width, height = None, None
     for image in images:
         image['path'] = os.path.abspath(os.path.join(
-            os.path.dirname(input_yaml), image['filename']))
+            os.path.dirname(input_yaml), image['path']))
         if width is None and height is None:
             ## assume all images have the same properties
             img = load_image(image['path'])
@@ -79,7 +78,7 @@ def get_imgs_from_yaml(input_yaml, riib=False):
             image['path'] = image['path'].replace('.png', '.pgm')
             image['path'] = image['path'].replace('rgb/train', 'riib/train')
             image['path'] = image['path'].replace('rgb/test', 'riib/test')
-            for box in image['annotations']:
+            for box in image['boxes']:
                 box['y_max'] = box['y_max'] + 8
                 box['y_min'] = box['y_min'] + 8
 
@@ -91,18 +90,14 @@ def get_imgs_from_yaml(input_yaml, riib=False):
 def create_tf_record(data, label_map_dict, is_yaml=False, ignore_difficult_instances=False):
     """
     Convert XML derived dict to tf.Example proto.
-
     Notice that this function normalizes the bounding box coordinates provided
     by the raw data.
-
     Args:
     :param data: dict holding (XML or YAML) fields for a single image (obtained by running dataset_util.recursive_parse_xml_to_dict)
     :param label_map_dict: A map from string label names to integers ids.
     :param ignore_difficult_instances: Whether to skip difficult instances in the dataset  (default: False).
-
     Returns:
     :return tf_example: The converted tf.Example.
-
     Raises:
     ValueError: if the image pointed to by data['filename'] is not a valid JPEG
     """
@@ -129,19 +124,15 @@ def create_tf_record(data, label_map_dict, is_yaml=False, ignore_difficult_insta
         width = int(data['width'])
         height = int(data['height'])
         filename = data['path'].encode('utf8')
-        for box in data['annotations']:
+        for box in data['boxes']:
             difficult_obj.append(0)
 
-            box['xmax'] = box['xmin'] + box['x_width']
-            box['ymax'] = box['ymin'] + box['y_height']
-
-
-            xmin.append(float(box['xmin']) / width)
-            ymin.append(float(box['ymin']) / height)
-            xmax.append(float(box['xmax']) / width)
-            ymax.append(float(box['ymax']) / height)
-            classes_text.append(box['class'].encode('utf8'))
-            classes.append(label_map_dict[box['class']])
+            xmin.append(float(box['x_min']) / width)
+            ymin.append(float(box['y_min']) / height)
+            xmax.append(float(box['x_max']) / width)
+            ymax.append(float(box['y_max']) / height)
+            classes_text.append(box['label'].encode('utf8'))
+            classes.append(label_map_dict[box['label']])
             truncated.append(0)
             poses.append(r'Unspecified'.encode('utf8'))
     else:
@@ -227,4 +218,4 @@ def main(_):
 
 
 if __name__ == '__main__':
-  tf.app.run()
+    tf.app.run()
