@@ -87,13 +87,12 @@ def detect_label_images(input_yaml, output_folder=None):
     :param output_folder: If None, do not save picture. Else enter path to folder
     """
 
-    PATH_TO_LABELS = r'data/udacity_label_map.pbtxt'
-    NUM_CLASSES = 14
+    PATH_TO_LABELS = r'data/sim_udacity_label_map.pbtxt'
+    NUM_CLASSES = 3
 
-    frozen_model_file = "./models/ssd_udacity/frozen_inference_graph.pb"
+    frozen_model_file = "./models/sim_freeze_tf1.3/frozen_inference_graph.pb"
 
-    image_dir = ""    
-        
+    image_dir = ""            
     label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
     categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
@@ -128,7 +127,7 @@ def detect_label_images(input_yaml, output_folder=None):
                     category_index,
                     use_normalized_coordinates=True,
                     max_boxes_to_draw=5,
-                    min_score_thresh=0.3,
+                    min_score_thresh=0.6,
                     line_thickness=8)
 
         if idx % 10 == 0 and idx > 0:
